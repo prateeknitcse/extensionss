@@ -18,6 +18,9 @@
     }
   };
 
-  setInterval(flush, 5000);
+  setInterval(flush, 1000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flush();
+  });
   window.addEventListener("beforeunload", flush);
 })();

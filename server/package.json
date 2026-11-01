@@ -2,10 +2,15 @@
   "name": "scroll-leaderboard-server",
   "version": "1.0.0",
   "type": "module",
-  "scripts": { "start": "node server.js" },
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
-    "better-sqlite3": "^11.3.0",
     "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "better-sqlite3": "^13.0.3"
   }
 }

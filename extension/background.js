@@ -1,18 +1,42 @@
-// Aggregates scroll px per local date, syncs totals to server every 10 min.
+// Aggregates scroll px per UTC date and syncs the total to the server shortly after scrolling
+// (at most once every SYNC_INTERVAL_MS), with a 1-minute alarm as a fallback.
 importScripts("config.js");
+
+const SYNC_INTERVAL_MS = 15000;
 
 const todayKey = () => new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
+// Serialize storage updates so scroll messages from several tabs can't overwrite each other.
+let queue = Promise.resolve();
+
 chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type !== "SCROLL_DELTA") return;
-  const key = `scroll_${todayKey()}`;
-  chrome.storage.local.get([key], (res) => {
-    const total = (res[key] || 0) + msg.px;
-    chrome.storage.local.set({ [key]: total });
-  });
+  if (msg.type !== "SCROLL_DELTA" || typeof msg.px !== "number") return;
+  queue = queue
+    .then(async () => {
+      const key = `scroll_${todayKey()}`;
+      const res = await chrome.storage.local.get([key]);
+      await chrome.storage.local.set({ [key]: (res[key] || 0) + msg.px });
+      scheduleSync();
+    })
+    .catch(() => {});
 });
 
-chrome.alarms.create("sync", { periodInMinutes: 10 });
+let lastSync = 0;
+let timer = null;
+let lastSent = { key: "", px: 0 };
+
+function scheduleSync() {
+  if (timer) return;
+  const wait = Math.max(0, SYNC_INTERVAL_MS - (Date.now() - lastSync));
+  timer = setTimeout(() => {
+    timer = null;
+    syncToServer();
+  }, wait);
+}
+
+chrome.alarms.get("sync", (a) => {
+  if (!a) chrome.alarms.create("sync", { periodInMinutes: 1 });
+});
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "sync") syncToServer();
@@ -27,27 +51,28 @@ async function getToken() {
 }
 
 async function syncToServer() {
+  lastSync = Date.now();
   const cfg = await chrome.storage.sync.get(["username"]);
   if (!cfg.username) return;
   const token = await getToken();
 
-  const key = `scroll_${todayKey()}`;
+  const date = todayKey();
+  const key = `scroll_${date}`;
   const data = await chrome.storage.local.get([key]);
   const px = data[key] || 0;
   if (px === 0) return;
 
+  const id = `${cfg.username}|${key}`;
+  if (lastSent.key === id && lastSent.px === px) return; // nothing new
+
   try {
-    await fetch(`${SERVER_URL}/api/scroll`, {
+    const res = await fetch(`${SERVER_URL}/api/scroll`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: cfg.username,
-        token,
-        date: todayKey(),
-        px,
-      }),
+      body: JSON.stringify({ username: cfg.username, token, date, px }),
     });
+    if (res.ok) lastSent = { key: id, px };
   } catch (e) {
-    // offline or server down - will retry next alarm with same accumulated total
+    // offline or server down - the next sync sends the same accumulated total
   }
 }
