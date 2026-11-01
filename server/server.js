@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import crypto from "node:crypto";
 import pg from "pg";
+import rateLimit from "express-rate-limit";
 
 if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL is not set (use your Neon connection string).");
@@ -83,17 +84,38 @@ const route = (fn) => (req, res) =>
   });
 
 const app = express();
+app.set("trust proxy", 1); // Render sits behind one proxy; without this every client looks like the same IP
 app.use(cors());
 app.use(express.json({ limit: "2kb" }));
+
+// Per-IP limits, per minute. They are generous for real use (about 1 scroll post per second
+// per user) and stop a single client from flooding the server or the database.
+const limiter = (max) =>
+  rateLimit({
+    windowMs: 60_000,
+    limit: max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Too many requests, slow down." },
+  });
+app.use("/api/claim", limiter(20));
+app.use("/api/scroll", limiter(300));
+app.use("/api/leaderboard", limiter(600));
+app.use("/api/stream", limiter(30));
 
 app.get("/healthz", (req, res) => res.send("ok"));
 
 // Server-sent events: tells open popups to re-fetch the leaderboard when scroll data changes.
 const MAX_STREAM_CLIENTS = 1000;
+const MAX_STREAMS_PER_IP = 10;
 const streamClients = new Set();
+const streamsByIp = new Map();
 
 app.get("/api/stream", (req, res) => {
   if (streamClients.size >= MAX_STREAM_CLIENTS) return res.status(503).end();
+  const ip = req.ip;
+  if ((streamsByIp.get(ip) || 0) >= MAX_STREAMS_PER_IP) return res.status(429).end();
+  streamsByIp.set(ip, (streamsByIp.get(ip) || 0) + 1);
   res.set({
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache, no-transform",
@@ -103,7 +125,12 @@ app.get("/api/stream", (req, res) => {
   res.flushHeaders();
   res.write("retry: 3000\n\n");
   streamClients.add(res);
-  req.on("close", () => streamClients.delete(res));
+  req.on("close", () => {
+    streamClients.delete(res);
+    const n = (streamsByIp.get(ip) || 1) - 1;
+    if (n <= 0) streamsByIp.delete(ip);
+    else streamsByIp.set(ip, n);
+  });
 });
 
 setInterval(() => {
