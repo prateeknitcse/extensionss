@@ -18,7 +18,7 @@
     }
   };
 
-  setInterval(flush, 1000);
+  setInterval(flush, 250);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") flush();
   });

@@ -95,7 +95,10 @@ function message(text) {
   return div;
 }
 
+let loadSeq = 0;
+
 async function loadLeaderboard(silent = false) {
+  const seq = ++loadSeq; // responses can arrive out of order; only the newest one is shown
   const cfg = await chrome.storage.sync.get(["username"]);
   const lb = $("lb");
   const rank = $("rank");
@@ -108,6 +111,7 @@ async function loadLeaderboard(silent = false) {
     const res = await fetch(`${SERVER_URL}/api/leaderboard${q}`);
     if (!res.ok) throw new Error(String(res.status));
     const { top, me, participants } = await res.json();
+    if (seq !== loadSeq) return;
 
     if (me) {
       rank.replaceChildren(

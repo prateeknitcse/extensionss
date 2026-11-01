@@ -28,4 +28,4 @@ Users only enter a username in the popup.
 - Usernames are 3-20 characters (letters, numbers, `_`, `-`), case-insensitive.
 - The first install to claim a username owns it. Each install keeps a random secret token in local storage; the server stores only its hash. Clearing extension data loses the claim.
 - Everyone is on one global leaderboard. The popup shows the top 10 and your own rank.
-- Scroll is tracked in px, synced to the server within about 15 seconds of scrolling, leaderboard resets weekly (Mon-Sun UTC).
+- Scroll is tracked in px, synced to the server about once per second while scrolling and pushed to open popups, leaderboard resets weekly (Mon-Sun UTC).

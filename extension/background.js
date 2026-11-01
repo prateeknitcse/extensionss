@@ -1,8 +1,8 @@
 // Aggregates scroll px per UTC date and syncs the total to the server shortly after scrolling
-// (at most once every SYNC_INTERVAL_MS), with a 1-minute alarm as a fallback.
+// (at most once per second), with a 1-minute alarm as a fallback.
 importScripts("config.js");
 
-const SYNC_INTERVAL_MS = 15000;
+const SYNC_INTERVAL_MS = 1000;
 
 const todayKey = () => new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 

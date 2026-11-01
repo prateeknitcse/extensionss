@@ -112,11 +112,11 @@ setInterval(() => {
 
 let notifyTimer = null;
 function notifyClients() {
-  if (notifyTimer) return; // batch bursts into one event per second
+  if (notifyTimer) return; // batch bursts into one event per 250 ms
   notifyTimer = setTimeout(() => {
     notifyTimer = null;
     for (const c of streamClients) c.write("event: update\ndata: {}\n\n");
-  }, 1000);
+  }, 250);
 }
 
 // First install to claim a username owns it.
