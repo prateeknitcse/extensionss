@@ -38,6 +38,7 @@
     }
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   body {
     margin: 0;
     width: 320px;
@@ -47,19 +48,28 @@
     font: 13px/1.4 system-ui, "Segoe UI", sans-serif;
   }
 
-  header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--ink); padding-bottom: 6px; }
-  h1 { margin: 0; font: italic 700 19px var(--serif); letter-spacing: -0.2px; }
-  #now { font: 10.5px var(--mono); color: var(--muted); text-align: right; }
+  header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-bottom: 2px solid var(--ink); padding-bottom: 6px; }
+  h1 { margin: 0; font: italic 700 17px var(--serif); letter-spacing: -0.2px; white-space: nowrap; }
+  #now { font: 10px var(--mono); color: var(--muted); text-align: right; white-space: nowrap; }
 
   .today { padding: 14px 0 10px; border-bottom: 1px solid var(--line); }
   .label { font: 10px var(--mono); text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); }
   .big { font: 700 38px/1.1 var(--serif); font-variant-numeric: tabular-nums; }
-  .big small { font: 14px var(--mono); color: var(--muted); margin-left: 3px; }
+  .big button { padding: 0; margin-left: 4px; border: 0; border-bottom: 1px dotted var(--muted); background: none; color: var(--muted); font: 14px var(--mono); text-transform: none; letter-spacing: 0; cursor: pointer; }
+  .big button:hover { color: var(--accent); background: none; border-bottom-color: var(--accent); }
+
+  #stats { margin-top: 6px; font: 11.5px var(--mono); color: var(--muted); }
+  .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .badge { padding: 1px 6px; border: 1px solid var(--ink); color: var(--ink); font: 10px var(--mono); text-transform: uppercase; letter-spacing: 0.6px; }
 
   #rank { margin: 10px 0 0; font: 12px var(--mono); min-height: 1.4em; }
   #rank b { color: var(--accent); }
 
-  .week { margin-top: 12px; }
+  .tabs { display: flex; gap: 14px; margin-top: 10px; border-bottom: 1px solid var(--line); }
+  .tabs button { padding: 3px 0; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted); font: 10.5px var(--mono); text-transform: uppercase; letter-spacing: 1.2px; cursor: pointer; }
+  .tabs button:hover { color: var(--accent); background: none; }
+  .tabs button.on { color: var(--ink); border-bottom-color: var(--ink); }
+
   #lb { margin-top: 4px; font: 12.5px var(--mono); }
   .row { display: grid; grid-template-columns: 26px 1fr auto; gap: 6px; padding: 5px 4px; border-bottom: 1px dotted var(--line); }
   .row .n { color: var(--muted); }
@@ -67,37 +77,34 @@
   .row .m { font-variant-numeric: tabular-nums; }
   .row.me { background: var(--mark); border-bottom-color: transparent; font-weight: 700; }
   .empty { color: var(--muted); padding: 6px 0; }
+  #lastWeek { margin-top: 6px; font: 11px var(--mono); color: var(--muted); }
 
-  [hidden] { display: none !important; }
   .account { display: flex; justify-content: space-between; align-items: end; margin-top: 14px; padding-top: 10px; border-top: 2px solid var(--ink); }
   .who { font: 700 14px var(--mono); }
-  .link { padding: 0; border: 0; background: none; color: var(--muted); text-transform: none; letter-spacing: 0; text-decoration: underline; font: 11px var(--mono); }
-  .link:hover { color: var(--accent); background: none; }
-  form { margin-top: 14px; padding-top: 10px; border-top: 2px solid var(--ink); }
-  .field { display: flex; margin-top: 3px; }
-  input {
-    flex: 1; min-width: 0;
-    padding: 6px 8px;
-    border: 1px solid var(--ink); border-right: 0; border-radius: 0;
-    background: var(--field); color: var(--ink);
-    font: 13px var(--mono);
-  }
-  input:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
-  button {
-    padding: 6px 12px; border: 1px solid var(--ink); border-radius: 0;
-    background: var(--ink); color: var(--paper);
-    font: 11px var(--mono); text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
-  }
+  button { padding: 6px 12px; border: 1px solid var(--ink); border-radius: 0; background: var(--ink); color: var(--paper); font: 11px var(--mono); text-transform: uppercase; letter-spacing: 1px; cursor: pointer; }
   button:hover { background: var(--accent); border-color: var(--accent); }
-  #status { min-height: 1.3em; margin-top: 4px; font: 11.5px var(--mono); color: var(--accent); }
-  #status.ok { color: var(--ok); }
-  .foot-actions { display: flex; gap: 12px; }
-  #theme { padding: 0; border: 0; background: none; color: var(--muted); text-transform: none; letter-spacing: 0; text-decoration: underline; font: 10.5px var(--mono); }
-  #theme:hover { color: var(--accent); background: none; }
+  .link { padding: 0; border: 0; background: none; color: var(--muted); text-transform: none; letter-spacing: 0; text-decoration: underline; font: 11px var(--mono); text-align: left; }
+  .link:hover { color: var(--accent); background: none; }
+  .link.danger:hover { color: #d22; }
 
-  footer { display: flex; justify-content: space-between; margin-top: 6px; font: 10.5px var(--mono); color: var(--muted); }
-  #refresh { padding: 0; border: 0; background: none; color: var(--muted); text-transform: none; letter-spacing: 0; text-decoration: underline; font: 10.5px var(--mono); }
-  #refresh:hover { color: var(--accent); background: none; }
+  form { margin-top: 14px; padding-top: 10px; border-top: 2px solid var(--ink); }
+  form.inner { margin-top: 8px; padding-top: 8px; border-top: 1px dotted var(--line); }
+  .field { display: flex; margin-top: 3px; }
+  input { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--ink); border-right: 0; border-radius: 0; background: var(--field); color: var(--ink); font: 13px var(--mono); }
+  input.solo { border-right: 1px solid var(--ink); margin-top: 3px; width: 100%; }
+  input:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+  #status, #menuStatus { min-height: 1.3em; margin-top: 4px; font: 11.5px var(--mono); color: var(--accent); }
+  #status.ok, #menuStatus.ok { color: var(--ok); }
+
+  details { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 8px; }
+  summary { cursor: pointer; font: 10px var(--mono); text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); }
+  summary:hover { color: var(--accent); }
+  .menu { display: grid; gap: 6px; margin-top: 8px; justify-items: start; }
+
+  footer { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; font: 10.5px var(--mono); color: var(--muted); }
+  .foot-actions { display: flex; gap: 12px; }
+  footer .link { font-size: 10.5px; white-space: nowrap; }
+  footer #note { white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -108,15 +115,19 @@
 
   <section class="today">
     <div class="label">Scrolled today</div>
-    <div class="big"><span id="todayVal">0.0</span><small>m</small></div>
+    <div class="big"><span id="todayVal">0.0</span><button id="unit" type="button" title="Change unit">m</button></div>
+    <div id="stats"></div>
   </section>
 
   <div id="rank"></div>
 
-  <section class="week">
-    <div class="label">This week &middot; top 10</div>
-    <div id="lb"></div>
-  </section>
+  <nav class="tabs" id="tabs">
+    <button type="button" data-range="day">Today</button>
+    <button type="button" data-range="week" class="on">Week</button>
+    <button type="button" data-range="all">All time</button>
+  </nav>
+  <div id="lb"></div>
+  <div id="lastWeek" hidden></div>
 
   <section id="current" class="account" hidden>
     <div>
@@ -135,15 +146,36 @@
     <div id="status"></div>
   </form>
 
+  <details id="settings">
+    <summary>Settings</summary>
+    <div class="menu">
+      <button id="pause" type="button" class="link">Pause tracking</button>
+      <button id="block" type="button" class="link">Don't track this site</button>
+      <button id="share" type="button" class="link">Copy share card</button>
+      <button id="copyCode" type="button" class="link">Copy recovery code</button>
+      <button id="restore" type="button" class="link">Restore from recovery code</button>
+      <button id="deleteAcct" type="button" class="link danger">Delete my account</button>
+    </div>
+    <form id="restoreForm" class="inner" hidden>
+      <label class="label" for="restoreName">Username</label>
+      <input id="restoreName" class="solo" maxlength="20" autocomplete="off">
+      <label class="label" for="restoreCode" style="display:block;margin-top:6px">Recovery code</label>
+      <input id="restoreCode" class="solo" autocomplete="off">
+      <button type="submit" style="margin-top:6px">Restore</button>
+    </form>
+    <div id="menuStatus"></div>
+  </details>
+
   <footer>
-    <span>resets Mon 00:00 UTC</span>
+    <span id="note">Mon-Sun, local time</span>
     <span class="foot-actions">
-      <button id="theme" type="button"></button>
-      <button id="refresh" type="button">refresh</button>
+      <button id="theme" type="button" class="link"></button>
+      <button id="refresh" type="button" class="link">refresh</button>
     </span>
   </footer>
 
   <script src="config.js"></script>
+  <script src="shared.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
