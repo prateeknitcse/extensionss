@@ -158,18 +158,54 @@ app.post(
     }
     if (!validToken(token)) return res.status(400).json({ error: "invalid token" });
 
-    const inserted = await pool.query(
-      `INSERT INTO users (username_key, username, token_hash)
-       VALUES ($1, $2, $3) ON CONFLICT (username_key) DO NOTHING`,
-      [username.toLowerCase(), username, hashToken(token)]
-    );
-    if (inserted.rowCount === 1) return res.json({ ok: true, username });
+    const key = username.toLowerCase();
+    const tokenHash = hashToken(token);
 
-    const existing = await getUser(username);
-    if (existing && safeEqual(existing.token_hash, hashToken(token))) {
-      return res.json({ ok: true, username: existing.username });
+    // One install has one identity. Claiming a name moves everything from any other name this
+    // install owned onto the new one and frees the old name, so old names leave the leaderboard.
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      const inserted = await client.query(
+        `INSERT INTO users (username_key, username, token_hash)
+         VALUES ($1, $2, $3) ON CONFLICT (username_key) DO NOTHING`,
+        [key, username, tokenHash]
+      );
+      let finalName = username;
+      if (inserted.rowCount === 0) {
+        const { rows } = await client.query("SELECT * FROM users WHERE username_key = $1", [key]);
+        if (!rows[0] || !safeEqual(rows[0].token_hash, tokenHash)) {
+          await client.query("ROLLBACK");
+          return res.status(409).json({ error: "Username is already taken" });
+        }
+        finalName = rows[0].username;
+      }
+
+      const { rows: older } = await client.query(
+        "SELECT username_key, username FROM users WHERE token_hash = $1 AND username_key <> $2",
+        [tokenHash, key]
+      );
+      for (const o of older) {
+        await client.query(
+          `INSERT INTO scroll (username, date, px)
+           SELECT $1, date, px FROM scroll WHERE username = $2
+           ON CONFLICT (username, date) DO UPDATE SET px = GREATEST(scroll.px, EXCLUDED.px)`,
+          [finalName, o.username]
+        );
+        await client.query("DELETE FROM scroll WHERE username = $1", [o.username]);
+        await client.query("DELETE FROM users WHERE username_key = $1", [o.username_key]);
+      }
+
+      await client.query("COMMIT");
+      if (older.length) notifyClients();
+      res.json({ ok: true, username: finalName });
+    } catch (e) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw e;
+    } finally {
+      client.release();
     }
-    res.status(409).json({ error: "Username is already taken" });
   })
 );
 

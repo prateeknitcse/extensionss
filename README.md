@@ -27,5 +27,6 @@ Users only enter a username in the popup.
 
 - Usernames are 3-20 characters (letters, numbers, `_`, `-`), case-insensitive.
 - The first install to claim a username owns it. Each install keeps a random secret token in local storage; the server stores only its hash. Clearing extension data loses the claim.
+- One install has one identity. Changing your username moves your scroll history to the new name and frees the old one, so old names don't stay on the leaderboard.
 - Everyone is on one global leaderboard. The popup shows the top 10 and your own rank.
 - Scroll is tracked in px, synced to the server about once per second while scrolling and pushed to open popups, leaderboard resets weekly (Mon-Sun UTC).
