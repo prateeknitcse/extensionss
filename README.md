@@ -53,9 +53,10 @@ After reloading the extension, refresh open tabs (old tabs keep the old content 
 - Names with no data are freed after 7 days. Accounts inactive for 90 days are removed.
 
 ### What counts as scrolling
-- Vertical scrolling the user causes: wheel, touchpad, touch, keyboard (arrows, space, Page keys, Home/End), scrollbar drag and middle-click autoscroll. This includes scrolling inside panels, such as feeds and chats.
-- Scrolling done by the page itself (carousels, jumping to the top after navigating) is ignored.
-- Not counted: horizontal scrolling, content inside Shadow DOM, and pages Chrome does not let extensions run on (chrome://, the Web Store, the built-in PDF viewer).
+- Vertical scrolling the user causes: wheel, touchpad, touch, keyboard (arrows, space, Page keys, Home/End) and scrollbar drag. This includes scrolling inside panels (Gmail, AI chats, feeds), inside web components (open Shadow DOM) and inside iframes.
+- How: after a user input, the extension reads the scroll position of the scrollable elements under the pointer or focus, every animation frame for a couple of seconds. It does not depend on the page's scroll events.
+- Scrolling done by the page itself (carousels, auto-scroll while an AI answer streams, jumping to the top after navigating) is ignored. Typing in a text box is ignored.
+- Not counted: horizontal scrolling, apps that fake scrolling by moving content with CSS transforms instead of real scrolling (some canvas-based editors), closed Shadow DOM, and pages Chrome does not let extensions run on (chrome://, the Web Store, the built-in PDF viewer).
 - Distance in meters is approximate. It assumes 96 dpi and ignores page zoom.
 
 ### Limits against cheating
